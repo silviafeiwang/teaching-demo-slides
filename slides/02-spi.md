@@ -1,3 +1,18 @@
+## How Sensors Connect to an MCU?
+
+::: {.table-wrap}
+
+| Interface | Device Type          | Specific Model         |
+|:---------|:----------------------|:-----------------------|
+| I²C      | Light Sensor          | BH1750                 |
+| SPI      | RFID Reader           | MFRC522                |
+| UART     | Bluetooth Module      | HC-05                  |
+| Analog   | Temperature Sensor    | LM35                   |
+| PWM DAC  | DAC Emulation         | STM32 PWM + RC Filter  |
+
+:::
+
+---
 
 ## SPI — Serial Peripheral Interface
 
@@ -11,7 +26,6 @@ Four primary signals:
 - CS (Chip Select)
 
 ---
-
 
 ## SPI Core Idea
 

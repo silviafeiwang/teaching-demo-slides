@@ -25,3 +25,39 @@ $presentation-h3-font-size: 0.9em;
     padding-left: 16px;
     padding-right: 16px;
   }
+// table
+
+.table-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.reveal table {
+    width: 85%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+}
+
+/* Header row */
+.reveal th {
+    background: #b26a6a;
+    /* your accent */
+    color: white;
+    font-weight: 600;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Body cells */
+.reveal td {
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #3f4a45;
+    /* your text color */
+}
+
+/* Zebra striping — extremely subtle, lecture-style */
+.reveal tbody tr:nth-child(even) td {
+    background: rgba(178, 106, 106, 0.06);
+    /* accent-tinted gray */
+}
