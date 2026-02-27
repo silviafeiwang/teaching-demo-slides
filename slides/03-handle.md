@@ -23,8 +23,19 @@ if (fd < 0) {
 :::
 
 ::: {.notes}
+On Linux systems like Raspberry Pi
+SPI devices appear as files under /dev.
+
+For example: /dev/spidev0.0
+
+The first number is the bus.
+The second is the chip select.
+
+We open it like a file.
+
+From the user-space perspective, SPI communication begins by opening this device file.
+
 This header from linux provides an interface to define the SPI communication structure.
-the first 0 is for bus and the second zero is for channel which is based on the chip select pin chosen on Raspberry Pi
 :::
 
 
@@ -96,6 +107,24 @@ if (ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) == -1)
     perror("SPI_IOC_WR_MAX_SPEED_HZ");
 ```
 
+::: {.notes}
+Before transferring data,
+we must configure SPI parameters.
+
+Mode:
+Defines clock polarity and phase.
+These must match the device datasheet.
+
+Bits per word:
+Typically 8 bits.
+
+Speed:
+Maximum clock frequency.
+
+These settings define how electrical signaling occurs.
+If mismatched, communication fails silently.
+:::
+
 ---
 
 
@@ -127,6 +156,23 @@ static int spi_transfer(int fd, uint8_t *tx, uint8_t *rx, size_t n,
 ```
 :::
 
+::: {.notes}
+Now we move from configuration to actual transfer.
+
+We describe one transaction using spi_ioc_transfer.
+
+This structure tells the kernel:
+- where the transmit buffer is,
+- where to store received data,
+- how many bytes,
+- what speed,
+- how many bits per word.
+
+Then we execute it with ioctl using SPI_IOC_MESSAGE.
+
+This single line triggers the hardware controller to generate clock pulses and exchange bytes.
+:::
+
 ---
 
 ## Example: Read MCP3008 Channel 0
@@ -151,3 +197,32 @@ int value = ((rx[1] & 0x03) << 8) | rx[2];
 printf("ADC = %d\n", value);
 ```
 :::
+
+::: {.notes}
+Now we apply that mechanism to a real device.
+
+The MCP3008 ADC requires a 3-byte SPI transaction.
+
+First byte:
+Start bit.
+
+Second byte:
+Configuration — single-ended mode and channel selection.
+
+Third byte:
+Dummy byte to generate clock pulses for the result.
+
+After transfer,
+the 10-bit ADC value is split across two bytes.
+
+We mask and shift the bits
+to reconstruct the numeric value.
+
+This is a concrete example of:
+device protocol layered on top of SPI.
+:::
+
+
+---
+
+## This is a closing slide
