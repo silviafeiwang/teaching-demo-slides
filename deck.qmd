@@ -1,5 +1,7 @@
 ---
-title: "Computer Engineering Design Studio (CMPE 246)"
+title: |
+  Interfacing the Physical World: Digital Interfaces and Peripheral Communication in Embedded Systems
+  <br><span class="title-sub">Computer Engineering Design Studio (CMPE 246)</span>
 author:
   - name: Fei Wang
     affiliation: <br>March 9, 2026
@@ -8,7 +10,7 @@ format:
         theme: theme.scss
         margin: 0.04
         incremental: true  
-        code-block-height: 300px
+        code-block-height: 600px
         menu: false
         slide-number: true
         revealjs-plugins:
@@ -16,5 +18,5 @@ format:
 ---
 
 {{< include slides/01-intro.md >}}
-{{< include slides/02-spi.md >}}
+{{< include slides/02-raspi.md >}}
 {{< include slides/03-handle.md >}}
