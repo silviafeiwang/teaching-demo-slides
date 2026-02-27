@@ -1,36 +1,26 @@
-## Interfacing the Physical World
+## Interfacing the Physical World {.smaller}
 
-::: {.notes}
-opening: a hook! maybe be a quote?
+
+
+![](/media/applications.jpg){style="max-width:600px;"}
+<figcaption>[Source: https://unstop.com/blog/classification-of-embedded-systems (This illustration will be replaced.)](https://unstop.com/blog/classification-of-embedded-systems)</figcaption>
+
+
+::: {.fragment data-fragment-index="1"}
+Microcontroller: Small, cost-effective computer on a chip 🧠
+:::
+  
+::: {.fragment data-fragment-index="4"}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↕
+
+**Hardware interfaces**: Bridge programs and reality 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↕
 :::
 
----
-
-## What is a Microcontroller?
-
-- Small, cost-effective computer on a chip
-- Components (image)
-
-- Applications: robotics, home automatic, automotive, consumer electronics
-
-
----
-
-## Why Do We Care About External Devices?
-
-- Sensors are everywhere
-- Embedded systems must interact with the physical world
-- Software alone cannot observe analog signals
-
-
-::: {.fragment}
-Hardware interfaces bridge programs and reality
+::: {.fragment data-fragment-index="2"}
+Peripheral devices: Interact with the physical world<span class="fragment" data-fragment-index="3">, e.g., sensors 👀 & actuators 💪</span>
 :::
 
-::: {.notes}
-
-:::
 
 ---
-
-## Applications of Microcontrollers and Peripheral devices

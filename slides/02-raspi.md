@@ -1,4 +1,4 @@
-## Raspberry Pi Hardware {.smaller}
+## Raspberry Pi and Its I/Os {.smaller}
 
 ::: {.columns}
 
@@ -132,7 +132,7 @@ typically over SPI.
 
 ![](/media/raspi-gpio.png){style="max-width:450px;"}
 ![](/media/raspi-gpio-legend.png){style="max-width:200px;"}
-<figcaption>[https://pinout.xyz/](https://pinout.xyz/)</figcaption>
+<figcaption>[Source: https://pinout.xyz/](https://pinout.xyz/)</figcaption>
 
 :::
 
@@ -145,7 +145,7 @@ typically over SPI.
 ::: {.column width="30%"}
 ![](/media/raspi-gpio.png){width=100%}  
 ![](/media/raspi-gpio-legend.png){width=50%}                  
-<figcaption>[https://pinout.xyz/](https://pinout.xyz/)</figcaption>
+<figcaption>[Source: https://pinout.xyz/](https://pinout.xyz/)</figcaption>
 :::
 
 ::: {.column width="70%"}
@@ -160,7 +160,6 @@ Main serial communication protocols besides raw GPIO:<span class="fragment" data
 
 
 ::: {.fragment data-fragment-index="5"}
-<!-- <span class="fragment">![](/media/satellite.png){style="max-width:30px;"}</span> -->
 ![](/media/satellite.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![](/media/temperature-sensor.png){style="max-width:30px;"}
 ![](/media/humidity-sensor.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -208,7 +207,7 @@ SPI is like private direct lines with speed.
 
 ::: aside
 <figcaption>
-[https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0).](https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs)
+[Source: https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0).](https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs)
 </figcaption>
 :::
 :::
@@ -217,10 +216,10 @@ SPI is like private direct lines with speed.
 A typical SPI transaction:
 
 1. Pulls **CS low** to select device
-2. Generates clock pulses on SCLK 
+2. Generates **clock pulses** on SCLK 
 3. On each clock edge:
-	- One bit shifts out on PICO
-	- One bit shifts in on POCI
+	- One bit **shifts out** on PICO
+	- One bit **shifts in** on POCI
 4. Releases **CS high**
 
 :::
