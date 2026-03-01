@@ -1,0 +1,170 @@
+[
+  {
+    "objectID": "deck.html#step-1-abstracting-the-wires",
+    "href": "deck.html#step-1-abstracting-the-wires",
+    "title": "Case Study: SPI-Driven Smoke Monitoring for Wildfire Detection",
+    "section": "STEP 1: Abstracting the Wires",
+    "text": "STEP 1: Abstracting the Wires\n\nTalk to the SPI harware\n → open() a file descriptor /dev/spidevX.Y \n\n\nint fd = open(\"/dev/spidev0.0\", O_RDWR);\nif (fd &lt; 0) {\n    perror(\"Failed to open SPI bus\");\n    return 1;\n}\n\n\nOn Linux systems in Raspberry Pi, almost everything is accessed through the file interface. To talk to the SPI hardware, we open a file descriptor. SPI devices appear as files under /dev.\nGive me access to the SPI device represented by /dev/spidev0.0, and allow me to both read from it and write to it.\nThe first number is SPI bus number. It refers to the SPI controller hardware on the Raspberry Pi. The second number is the chip select number on that bus.\nTill now, we basically have established the communication with the sensor that CS0 is connected to."
+  },
+  {
+    "objectID": "deck.html#step-2-the-setup",
+    "href": "deck.html#step-2-the-setup",
+    "title": "Case Study: SPI-Driven Smoke Monitoring for Wildfire Detection",
+    "section": "STEP 2: The Setup",
+    "text": "STEP 2: The Setup\n\n\nUse ioctl() from &lt;sys/ioctl.h&gt; to read or override the current settings for data transfer parameters in &lt;linux/spi/spidev.h&gt;\n\nSPI_IOC_RD_MODE, SPI_IOC_WR_MODE: Choose among constants SPI_MODE_0..SPI_MODE_3\nSPI_IOC_RD_BITS_PER_WORD, SPI_IOC_WR_BITS_PER_WORD\nSPI_IOC_RD_MAX_SPEED_HZ, SPI_IOC_WR_MAX_SPEED_HZ \n\n\n\n\nuint8_t mode = SPI_MODE_0;    // CPOL=0, CPHA=0 \nuint8_t bits = 8;             \nuint32_t speed = 1000000;     // 1 MHz\n\n// These calls 'push' our configuration into the hardware registers\nioctl(fd, SPI_IOC_WR_MODE, &mode);\nioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);\nioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);\n\n\nBefore transferring data, we configure the SPI parameters. Remember the modes we just introduced? This is where we tell the Pi which of those four physical timing patterns to use. Here, we need a special system call named ioctl (I/O Control) to ‘push’ our configuration into the hardware registers. We use it to set the mode, bits per word, and the clock speed.\nHere, we’ll use Mode 0 at 1MHz—fast for alerts, but stable for long outdoor cables.\nBits per word: Typically 8 bits.\nSpeed: Maximum clock frequency."
+  },
+  {
+    "objectID": "deck.html#step-3-the-transfer",
+    "href": "deck.html#step-3-the-transfer",
+    "title": "Case Study: SPI-Driven Smoke Monitoring for Wildfire Detection",
+    "section": "STEP 3: The Transfer",
+    "text": "STEP 3: The Transfer\n\n\nTwo essential helpers from &lt;linux/spi/spidev.h&gt;\n\nInstantiate structure spi_ioc_transfer to let the kernel know how to perform each SPI transaction\nFull-duplex access using SPI_IOC_MESSAGE(N), where N indicates how many spi_ioc_transfer structures we are passing as a single message\n\n\n\n\n// The \"Wildfire Detection\" Request\nuint8_t tx_buf[3] = {0x01, 0x80, 0x00}; // The command we want to send\nuint8_t rx_buf[3] = {0};               // The buffer to catch the response\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx_buf,\n    .rx_buf = (unsigned long)rx_buf,\n    .len = 3,\n};\n\nioctl(fd, SPI_IOC_MESSAGE(1), &tr);\n\n// Combine the bits into a 10-bit smoke density value\nint smoke_level = ((rx_buf[1] & 0x03) &lt;&lt; 8) + rx_buf[2];\n\nif (smoke_level &gt; 500) {\n    printf(\"🔥 Smoke levels rising... \"\n           \"hopefully it's just someone's BBQ near UBCO.\\n\");\n}\n\n\nNow we move from configuration to actual transfer.\nWe describe one transaction using spi_ioc_transfer.\nThis structure tells the kernel: - where the transmit buffer is, - where to store received data, - how many bytes\nThen we execute transaction using SPI_IOC_MESSAGE. This single line triggers the hardware controller to generate clock pulses and exchange bytes.\nNow we apply that mechanism to a real device.\nLook at this struct. It has a transmit buffer and a receive buffer. Remember what we saw in the drawing? SPI is Full-Duplex. For every bit we ‘push’ out on PICO, we ‘pull’ one in on POCI. You are always sending and receiving at the same time.\nThe SPI_IOC_MESSAGE(1) call does everything in one atomic burst: It drops the CS line, fires the Clock 24 times (3 ), and captures the incoming bits. When it’s done, it lifts the CS line and hands the data back to your C program.\nYou may have noticed some ‘magic’ numbers in our command: 0x01, 0x80. Why send 3 bytes? Why ignore the very first byte that comes back? Why the result value is in 10 bits? I’ll leave that as a challenge for you to solve tonight. Use our Full-Duplex timing diagram and the sensor’s Technical Manual to figure out why.\nRight now, we’re just taking a snapshot. To turn this into a monitoring system, we wrap this in a loop and sample continuously.\nThat’s it. Within 50 lines of C code, you’ve built the heart of a wildfire early-warning system. You aren’t just writing code; you are engineering solutions for the Okanagan."
+  },
+  {
+    "objectID": "slides/03-handle.html",
+    "href": "slides/03-handle.html",
+    "title": "",
+    "section": "",
+    "text": "Talk to the SPI harware\n → open() a file descriptor /dev/spidevX.Y \n\n\nint fd = open(\"/dev/spidev0.0\", O_RDWR);\nif (fd &lt; 0) {\n    perror(\"Failed to open SPI bus\");\n    return 1;\n}\n\n\nOn Linux systems in Raspberry Pi, almost everything is accessed through the file interface. To talk to the SPI hardware, we open a file descriptor. SPI devices appear as files under /dev.\nGive me access to the SPI device represented by /dev/spidev0.0, and allow me to both read from it and write to it.\nThe first number is SPI bus number. It refers to the SPI controller hardware on the Raspberry Pi. The second number is the chip select number on that bus.\nTill now, we basically have established the communication with the sensor that CS0 is connected to."
+  },
+  {
+    "objectID": "slides/03-handle.html#step-1-abstracting-the-wires",
+    "href": "slides/03-handle.html#step-1-abstracting-the-wires",
+    "title": "",
+    "section": "",
+    "text": "Talk to the SPI harware\n → open() a file descriptor /dev/spidevX.Y \n\n\nint fd = open(\"/dev/spidev0.0\", O_RDWR);\nif (fd &lt; 0) {\n    perror(\"Failed to open SPI bus\");\n    return 1;\n}\n\n\nOn Linux systems in Raspberry Pi, almost everything is accessed through the file interface. To talk to the SPI hardware, we open a file descriptor. SPI devices appear as files under /dev.\nGive me access to the SPI device represented by /dev/spidev0.0, and allow me to both read from it and write to it.\nThe first number is SPI bus number. It refers to the SPI controller hardware on the Raspberry Pi. The second number is the chip select number on that bus.\nTill now, we basically have established the communication with the sensor that CS0 is connected to."
+  },
+  {
+    "objectID": "slides/03-handle.html#step-2-the-setup",
+    "href": "slides/03-handle.html#step-2-the-setup",
+    "title": "",
+    "section": "STEP 2: The Setup",
+    "text": "STEP 2: The Setup\n\n\nUse ioctl() from &lt;sys/ioctl.h&gt; to read or override the current settings for data transfer parameters in &lt;linux/spi/spidev.h&gt;\n\nSPI_IOC_RD_MODE, SPI_IOC_WR_MODE: Choose among constants SPI_MODE_0..SPI_MODE_3\nSPI_IOC_RD_BITS_PER_WORD, SPI_IOC_WR_BITS_PER_WORD\nSPI_IOC_RD_MAX_SPEED_HZ, SPI_IOC_WR_MAX_SPEED_HZ \n\n\n\n\nuint8_t mode = SPI_MODE_0;    // CPOL=0, CPHA=0 \nuint8_t bits = 8;             \nuint32_t speed = 1000000;     // 1 MHz\n\n// These calls 'push' our configuration into the hardware registers\nioctl(fd, SPI_IOC_WR_MODE, &mode);\nioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits);\nioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);\n\n\nBefore transferring data, we configure the SPI parameters. Remember the modes we just introduced? This is where we tell the Pi which of those four physical timing patterns to use. Here, we need a special system call named ioctl (I/O Control) to ‘push’ our configuration into the hardware registers. We use it to set the mode, bits per word, and the clock speed.\nHere, we’ll use Mode 0 at 1MHz—fast for alerts, but stable for long outdoor cables.\nBits per word: Typically 8 bits.\nSpeed: Maximum clock frequency."
+  },
+  {
+    "objectID": "slides/03-handle.html#step-3-the-transfer",
+    "href": "slides/03-handle.html#step-3-the-transfer",
+    "title": "",
+    "section": "STEP 3: The Transfer",
+    "text": "STEP 3: The Transfer\n\n\nTwo essential helpers from &lt;linux/spi/spidev.h&gt;\n\nInstantiate structure spi_ioc_transfer to let the kernel know how to perform each SPI transaction\nFull-duplex access using SPI_IOC_MESSAGE(N), where N indicates how many spi_ioc_transfer structures we are passing as a single message\n\n\n\n\n// The \"Wildfire Detection\" Request\nuint8_t tx_buf[3] = {0x01, 0x80, 0x00}; // The command we want to send\nuint8_t rx_buf[3] = {0};               // The buffer to catch the response\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx_buf,\n    .rx_buf = (unsigned long)rx_buf,\n    .len = 3,\n};\n\nioctl(fd, SPI_IOC_MESSAGE(1), &tr);\n\n// Combine the bits into a 10-bit smoke density value\nint smoke_level = ((rx_buf[1] & 0x03) &lt;&lt; 8) + rx_buf[2];\n\nif (smoke_level &gt; 500) {\n    printf(\"🔥 Smoke levels rising... \"\n           \"hopefully it's just someone's BBQ near UBCO.\\n\");\n}\n\n\nNow we move from configuration to actual transfer.\nWe describe one transaction using spi_ioc_transfer.\nThis structure tells the kernel: - where the transmit buffer is, - where to store received data, - how many bytes\nThen we execute transaction using SPI_IOC_MESSAGE. This single line triggers the hardware controller to generate clock pulses and exchange bytes.\nNow we apply that mechanism to a real device.\nLook at this struct. It has a transmit buffer and a receive buffer. Remember what we saw in the drawing? SPI is Full-Duplex. For every bit we ‘push’ out on PICO, we ‘pull’ one in on POCI. You are always sending and receiving at the same time.\nThe SPI_IOC_MESSAGE(1) call does everything in one atomic burst: It drops the CS line, fires the Clock 24 times (3 ), and captures the incoming bits. When it’s done, it lifts the CS line and hands the data back to your C program.\nYou may have noticed some ‘magic’ numbers in our command: 0x01, 0x80. Why send 3 bytes? Why ignore the very first byte that comes back? Why the result value is in 10 bits? I’ll leave that as a challenge for you to solve tonight. Use our Full-Duplex timing diagram and the sensor’s Technical Manual to figure out why.\nRight now, we’re just taking a snapshot. To turn this into a monitoring system, we wrap this in a loop and sample continuously.\nThat’s it. Within 50 lines of C code, you’ve built the heart of a wildfire early-warning system. You aren’t just writing code; you are engineering solutions for the Okanagan."
+  },
+  {
+    "objectID": "slides/02-raspi.html",
+    "href": "slides/02-raspi.html",
+    "title": "",
+    "section": "",
+    "text": "microSD card slot\n\n\nDSI display port\n\n\nUSB 3.0 power port\n\n\nDual 4k HDMI ports\n\n\nCSI camera port\n\n\n4-pole stereo audio\n\n\nDual USB 2.0 ports\n\n\n\n\n\n\n\n\n8GB Raspberry Pi 4\n\n\n\n\n\n\n\n\n\n\nWiFi & Bluetooth 5.0 radio\n\n\n20x2 GPIO header\n\n\n\n\n\nGigabit ethernet port\n\n\nDual USB 3.0 ports\n\n\n\n\n\n\n\nGPIO (General Purpose Input & Output): Programmable digital pins on a microcontroller\n\nInput for monitor: Reads digital voltage, HIGH (≈ 3.3V) / LOW (≈ 0V)\nOuput for control: Drives digital voltage\n\n\n\n\n\n\nHere is an overview of Raspberry Pi 4.\nMany components here are for high-level computing: HDMI, USB, networking.\nOne powerful feature of the Raspberry Pi is the row of 20x2 GPIO pins along the top edge of the board\nGPIO stands for General Purpose Input/Output.\nThese pins are programmable digital lines that function as the physical interface between the Raspberry Pi and the outside world.\nThey can read voltage levels (HIGH or LOW), or drive voltage to control external devices."
+  },
+  {
+    "objectID": "slides/02-raspi.html#raspberry-pi-and-its-ios",
+    "href": "slides/02-raspi.html#raspberry-pi-and-its-ios",
+    "title": "",
+    "section": "",
+    "text": "microSD card slot\n\n\nDSI display port\n\n\nUSB 3.0 power port\n\n\nDual 4k HDMI ports\n\n\nCSI camera port\n\n\n4-pole stereo audio\n\n\nDual USB 2.0 ports\n\n\n\n\n\n\n\n\n8GB Raspberry Pi 4\n\n\n\n\n\n\n\n\n\n\nWiFi & Bluetooth 5.0 radio\n\n\n20x2 GPIO header\n\n\n\n\n\nGigabit ethernet port\n\n\nDual USB 3.0 ports\n\n\n\n\n\n\n\nGPIO (General Purpose Input & Output): Programmable digital pins on a microcontroller\n\nInput for monitor: Reads digital voltage, HIGH (≈ 3.3V) / LOW (≈ 0V)\nOuput for control: Drives digital voltage\n\n\n\n\n\n\nHere is an overview of Raspberry Pi 4.\nMany components here are for high-level computing: HDMI, USB, networking.\nOne powerful feature of the Raspberry Pi is the row of 20x2 GPIO pins along the top edge of the board\nGPIO stands for General Purpose Input/Output.\nThese pins are programmable digital lines that function as the physical interface between the Raspberry Pi and the outside world.\nThey can read voltage levels (HIGH or LOW), or drive voltage to control external devices."
+  },
+  {
+    "objectID": "slides/02-raspi.html#a-closer-look-at-the-gpio-pins",
+    "href": "slides/02-raspi.html#a-closer-look-at-the-gpio-pins",
+    "title": "",
+    "section": "A Closer Look at the GPIO Pins",
+    "text": "A Closer Look at the GPIO Pins\n\n \n\nSource: https://pinout.xyz/\n\n\n\nLet’s zoom in and see what is actually available on that 40-pin header. There’s a lot of things going on at this part of the board with 40 pins. But not all pins are equal.\nSome are power. Some are ground. Some are general digital I/O. Some are wired internally to communication controllers.\nNow, while we could manually toggle GPIO pins to send bits, that would be tedious and error-prone.\nWhile GPIO gives us raw digital control, Raspberry Pi provides three main specialized protocols that organize multiple GPIO lines into different ways of communication with external devices such as ….\nInstead, the Raspberry Pi includes hardware controllers that implement standardized communication protocols.\nThese protocols organize multiple GPIO pins into structured digital conversations."
+  },
+  {
+    "objectID": "slides/02-raspi.html#a-closer-look-at-the-gpio-pins-1",
+    "href": "slides/02-raspi.html#a-closer-look-at-the-gpio-pins-1",
+    "title": "",
+    "section": "A Closer Look at the GPIO Pins",
+    "text": "A Closer Look at the GPIO Pins\n\n\n\n\n\n\n\nSource: https://pinout.xyz/\n\n\nMain serial communication protocols besides raw GPIO:\n\n\n\n\n\n\n\n\n\n\n\nProtocol\nPins\nClock\nSpeed\nMulti-Device?\nBest For\n\n\n\n\nUART\n2\nNo (Asynchronous)\nlow to Moderate\nNo (Point-to-point)\nLong-distance communication \n\n\nI²C\n2\nYes\nModerate\nYes (Addressed bus)\nMany simple sensors \n\n\nSPI\n4+\nYes\nHigh\nYes (Chip-select lines)\nHigh-speed sensors/memory \n\n\n\n\n\n\n\n\n\n\n\n\n                         \n\n\n\n\n\nThere are three main serial communication protocols besides raw GPIO.\nUART: uses two pins named as TX (transmit) and RX (receive) for asynchronous communication Simple, asynchronous, point-to-point. Good for long-distance or debugging.\nI²C: uses two pins named SDA (serial data line) for data exchange and SCL (serial clock line) which functions as a clock is like a shared bus with addresses. Many devices can share the same two wires.\nSPI: Four or more wires. is like private direct lines with speed. Each device has its own chip-select.\n\nQuick Quiz: Which Interface Would You Choose?\nYou need to connect the following devices to a Raspberry Pi: 1. GPS: outputs low-rate serial text data in a point-to-point configuration -&gt; UART 2. 5 temperature & humidity sensors: low bandwidth, multiple devices, each sensor has an address 3. Small OLED display: Needs higher data rate than sensors, frequent updates, ften designed with SPI interface. 4. A blinking LED: Just HIGH and LOW. Raw GPIO. No protocol needed.\nThink: - Speed requirement? - distance - Number of devices? - Complexity?"
+  },
+  {
+    "objectID": "slides/02-raspi.html#translate-analog-to-digital",
+    "href": "slides/02-raspi.html#translate-analog-to-digital",
+    "title": "",
+    "section": "Translate Analog to Digital",
+    "text": "Translate Analog to Digital\n\nRaspberry Pi GPIO is digital only\nCannot measure continuous voltage\n\n\nADC (Analog-to-Digital Converter):\n\nContinuous voltage → Discrete digital value\nResolution — precision in amplitude, e.g., 10-bit ADC → 1024 discrete levels\nSampling rate — precision in time\n\n\n\nSo we now know how digital devices talk to each other.\nBut there’s a gap you might have noticed:\nAll of these protocols assume the signal is already digital.\nBut the real world is analog. Many physical sensors are not digital.\nA gas sensor, for example, may output a voltage proportional to concentration.\nThat voltage is continuous. It’s not just 0 or 1.\nThe Raspberry Pi GPIO cannot measure continuous voltage. It only detects HIGH or LOW.\nSo how do we convert that continuous voltage into something the processor understands?\n\nThat’s why we need an ADC.\nAn ADC samples the input voltage and converts it into a binary number.\nResolution determines how fine the voltage precision is. If it’s a 10-bit ADC, it maps the voltage range into 1024 discrete levels.\nSampling rate determines how often we measure it.\nResolution: How precise each reading is Sampling Rate: How often readings are taken\nThink: resolution is spatial precision, sampling rate is temporal precision. Think of it like taking photos: • Resolution = image sharpness (pixel density) • Sampling rate = frames per second If resolution is low → blurry values. If sampling rate is low → you miss fast events.\nSince Raspberry Pi has no built-in ADC, we connect an external ADC chip."
+  },
+  {
+    "objectID": "slides/02-raspi.html#this-is-a-transition-slide-todo",
+    "href": "slides/02-raspi.html#this-is-a-transition-slide-todo",
+    "title": "",
+    "section": "This is a transition slide (TODO)",
+    "text": "This is a transition slide (TODO)\n\nA case study: A low-cost air-quality node on your rooftop\nSmoke sensor (analog voltage) → MCP3008 ADC (digital number) → Raspberry Pi via SPI → logging/alerts\n\n\nWhen I was looking up Kelowna, one thing kept coming up — wildfire season is not a rare event here. It’s practically a recurring guest.\nSo imagine we build a tiny “smoke snitch” — a low-cost air-quality node sitting quietly on a rooftop, constantly watching the air and ready to complain the moment smoke levels rise.\nThe smoke sensor gives us an analog voltage — not something the Raspberry Pi can directly understand. So we add an ADC to translate that voltage into numbers, and we use SPI to shuttle those numbers into the Pi.\nNow let’s open the hood and see how those bits actually travel across the four SPI wires before we write the code."
+  },
+  {
+    "objectID": "slides/02-raspi.html#wire-spi-model",
+    "href": "slides/02-raspi.html#wire-spi-model",
+    "title": "",
+    "section": "4-Wire SPI Model",
+    "text": "4-Wire SPI Model\n\n\n\n\n\n\n\n\n\n\nSource: https://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0).\n\n\nA typical SPI transaction:\n\nPulls CS low to select device\nGenerates clock pulses on SCLK\nOn each clock edge:\n\nOne bit shifts out on PICO\nOne bit shifts in on POCI\n\nReleases CS high\n\n\nClock ticks → Bits shift → Data sampled\n\n                               ↪ in both directions at the same time\n\n\n\nBefore stepping into the code, we need to understand exactly how SPI moves data electrically.\nLet’s slow down and look at the four wires. Each one has a very specific job. • SCLK is generated only by the controller. • MOSI (PICO) carries bits from controller to peripheral device. • MISO (POCI) carries bits back from device to controller. • CS enables exactly one peripheral at a time.\nOnce CS goes low, the controller starts generating clock pulses.\nNow point at the waveform: • On every clock edge, a bit shifts out. • At the same time, another bit shifts in. • After 8 clock pulses, one byte is exchanged.\nSPI is synchronous — clock defines timing Full-duplex → Send and receive simultaneously\nEven if we only care about receiving data, we still must send dummy bits to generate clock pulses."
+  },
+  {
+    "objectID": "slides/01-intro.html",
+    "href": "slides/01-intro.html",
+    "title": "",
+    "section": "",
+    "text": "Source: https://unstop.com/blog/classification-of-embedded-systems (This illustration will be replaced.)\n\n\nMicrocontroller: Small, cost-effective computer on a chip 🧠\n\n\n                                                        ↕\nHardware interfaces: Bridge programs and reality\n                                                        ↕\n\n\nPeripheral devices: Interact with the physical world, e.g., sensors 👀 & actuators 💪\n\n\nWe often think of computation as abstract — code, algorithms, memory.\nBut embedded systems are different.\nThey interact with the physical world. The ability to sense the physical world and act on it.\nThey are everywhere.\nA microcontroller is a small computer on a chip — like a brain.\nBut it cannot see, hear, or move by itself.\nIt needs peripheral devices.\nSensors bring information in. Actuators push actions out.\nHardware interfaces are the “nervous system” connecting software and reality.\nToday, we’ll zoom into one small but powerful example — the Raspberry Pi — and see how a microcontroller actually talks to sensors and devices at the electrical level."
+  },
+  {
+    "objectID": "slides/01-intro.html#interfacing-the-physical-world",
+    "href": "slides/01-intro.html#interfacing-the-physical-world",
+    "title": "",
+    "section": "",
+    "text": "Source: https://unstop.com/blog/classification-of-embedded-systems (This illustration will be replaced.)\n\n\nMicrocontroller: Small, cost-effective computer on a chip 🧠\n\n\n                                                        ↕\nHardware interfaces: Bridge programs and reality\n                                                        ↕\n\n\nPeripheral devices: Interact with the physical world, e.g., sensors 👀 & actuators 💪\n\n\nWe often think of computation as abstract — code, algorithms, memory.\nBut embedded systems are different.\nThey interact with the physical world. The ability to sense the physical world and act on it.\nThey are everywhere.\nA microcontroller is a small computer on a chip — like a brain.\nBut it cannot see, hear, or move by itself.\nIt needs peripheral devices.\nSensors bring information in. Actuators push actions out.\nHardware interfaces are the “nervous system” connecting software and reality.\nToday, we’ll zoom into one small but powerful example — the Raspberry Pi — and see how a microcontroller actually talks to sensors and devices at the electrical level."
+  },
+  {
+    "objectID": "slides/backup.html",
+    "href": "slides/backup.html",
+    "title": "",
+    "section": "",
+    "text": "Interface\nDevice Type\nSpecific Model\n\n\n\n\nI²C\nLight Sensor\nBH1750\n\n\nSPI\nRFID Reader\nMFRC522\n\n\nUART\nBluetooth Module\nHC-05\n\n\nAnalog\nTemperature Sensor\nLM35\n\n\nPWM DAC\nDAC Emulation\nSTM32 PWM + RC Filter"
+  },
+  {
+    "objectID": "slides/backup.html#wire-spi-model",
+    "href": "slides/backup.html#wire-spi-model",
+    "title": "",
+    "section": "4-Wire SPI Model",
+    "text": "4-Wire SPI Model\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0)."
+  },
+  {
+    "objectID": "slides/backup.html#wire-spi-model-1",
+    "href": "slides/backup.html#wire-spi-model-1",
+    "title": "",
+    "section": "4-Wire SPI Model",
+    "text": "4-Wire SPI Model\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0)."
+  },
+  {
+    "objectID": "slides/backup.html#wire-spi-model-2",
+    "href": "slides/backup.html#wire-spi-model-2",
+    "title": "",
+    "section": "4-Wire SPI Model",
+    "text": "4-Wire SPI Model\n\n\n\n \n\nhttps://learn.sparkfun.com/tutorials/serial-peripheral-interface-spi/chip-select-cs (CC BY-SA 4.0).\n\n\nCode Example: Blink an LED\n\n\na demo image or video\n\ninput or output something? output\ndigital or analog? digital\n\n\ncode snippet\n\n\n\n\nAnalog Interfacing with ADC\n\n\n\nReal-world signals are often analog (e.g., temperature sensors)\nAn ADC is used to convert these signals to digital values\nKey items:\n\nSampling rate: How frequently the signal is sampled\nResolution: The number of bits the ADC uses (e.g., 10 bit -&gt; 1024 values)\n\n\n\nexample figures + interaction\n\n\n\n\nCode Example – Read Temp Sensor\n\n\na demo image or video\n\ninput or output something? input\ndigital or analog? analog\n\n\ncode snippet\n\n\n\nCan somebody help me figure out ….?\n\n&lt;!– | Protocol | Pins | Communication Type | Typical Uses |\n——– | ——————————————————– | —————————————————————————— | ———————————————————————————————— |\nUART | 2 | Asynchronous | Debugging console, GPS modules, Bluetooth |\nI²C | 2 | Synchronous, half-duplex | Sensors, EEPROM, Real-Time Clocks |\nSPI | 4+ | Synchronous, full-duplex | Displays, SD cards, high-speed peripherals | –&gt; |\n\nStep 3 — Transfer bytes\n\nInstantiate structure spi_ioc_transfer from &lt;linux/spi/spidev.h&gt; to let the kernel know how to perform the SPI transaction with per-transfer setting\nFull-duplex access using SPI_IOC_MESSAGE(N) from &lt;linux/spi/spidev.h&gt;\n\nN indicates how many spi_ioc_transfer structures we are passing\n\n\nuint8_t tx[3] = {0};\nuint8_t rx[3] = {0};\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx,\n    .rx_buf = (unsigned long)rx,\n    .len = sizeof(tx),\n    .delay_usecs = 0,\n    .speed_hz = speed,\n    .bits_per_word = bits,\n};\nuint8_t tx[3] = {0};\nuint8_t rx[3] = {0};\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx,\n    .rx_buf = (unsigned long)rx,\n    .len = sizeof(tx),\n    .delay_usecs = 0,\n    .speed_hz = speed,    \n    .bits_per_word = bits,\n};\n\nint ret = ioctl(f_dev, SPI_IOC_MESSAGE(1), &tr);\nif (ret &lt; 1) {\n    perror(\"SPI_IOC_MESSAGE\");\n}\n\nEven when reading, we must send bytes to generate clock pulses."
+  },
+  {
+    "objectID": "slides/backup.html#code-example-blink-an-led",
+    "href": "slides/backup.html#code-example-blink-an-led",
+    "title": "",
+    "section": "Code Example: Blink an LED",
+    "text": "Code Example: Blink an LED\n\n\na demo image or video\n\ninput or output something? output\ndigital or analog? digital\n\n\ncode snippet"
+  },
+  {
+    "objectID": "slides/backup.html#analog-interfacing-with-adc",
+    "href": "slides/backup.html#analog-interfacing-with-adc",
+    "title": "",
+    "section": "Analog Interfacing with ADC",
+    "text": "Analog Interfacing with ADC\n\n\n\nReal-world signals are often analog (e.g., temperature sensors)\nAn ADC is used to convert these signals to digital values\nKey items:\n\nSampling rate: How frequently the signal is sampled\nResolution: The number of bits the ADC uses (e.g., 10 bit -&gt; 1024 values)\n\n\n\nexample figures + interaction"
+  },
+  {
+    "objectID": "slides/backup.html#code-example-read-temp-sensor",
+    "href": "slides/backup.html#code-example-read-temp-sensor",
+    "title": "",
+    "section": "Code Example – Read Temp Sensor",
+    "text": "Code Example – Read Temp Sensor\n\n\na demo image or video\n\ninput or output something? input\ndigital or analog? analog\n\n\ncode snippet\n\n\n\nCan somebody help me figure out ….?\n\n&lt;!– | Protocol | Pins | Communication Type | Typical Uses |\n——– | ——————————————————– | —————————————————————————— | ———————————————————————————————— |\nUART | 2 | Asynchronous | Debugging console, GPS modules, Bluetooth |\nI²C | 2 | Synchronous, half-duplex | Sensors, EEPROM, Real-Time Clocks |\nSPI | 4+ | Synchronous, full-duplex | Displays, SD cards, high-speed peripherals | –&gt; |"
+  },
+  {
+    "objectID": "slides/backup.html#step-3-transfer-bytes",
+    "href": "slides/backup.html#step-3-transfer-bytes",
+    "title": "",
+    "section": "Step 3 — Transfer bytes",
+    "text": "Step 3 — Transfer bytes\n\nInstantiate structure spi_ioc_transfer from &lt;linux/spi/spidev.h&gt; to let the kernel know how to perform the SPI transaction with per-transfer setting\nFull-duplex access using SPI_IOC_MESSAGE(N) from &lt;linux/spi/spidev.h&gt;\n\nN indicates how many spi_ioc_transfer structures we are passing\n\n\nuint8_t tx[3] = {0};\nuint8_t rx[3] = {0};\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx,\n    .rx_buf = (unsigned long)rx,\n    .len = sizeof(tx),\n    .delay_usecs = 0,\n    .speed_hz = speed,\n    .bits_per_word = bits,\n};\nuint8_t tx[3] = {0};\nuint8_t rx[3] = {0};\n\nstruct spi_ioc_transfer tr = {\n    .tx_buf = (unsigned long)tx,\n    .rx_buf = (unsigned long)rx,\n    .len = sizeof(tx),\n    .delay_usecs = 0,\n    .speed_hz = speed,    \n    .bits_per_word = bits,\n};\n\nint ret = ioctl(f_dev, SPI_IOC_MESSAGE(1), &tr);\nif (ret &lt; 1) {\n    perror(\"SPI_IOC_MESSAGE\");\n}\n\nEven when reading, we must send bytes to generate clock pulses."
+  }
+]

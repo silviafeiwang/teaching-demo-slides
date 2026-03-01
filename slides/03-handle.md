@@ -1,5 +1,5 @@
 
-## Abstracting the Wires
+## STEP 1: Abstracting the Wires
 
 - Talk to the SPI harware 
   
@@ -31,7 +31,7 @@ Till now, we basically have established the communication with the sensor that C
 
 ---
 
-## The Setup
+## STEP 2: The Setup
 
 ::: {style="font-size: 0.8em;"}
 - Use `ioctl()` from `<sys/ioctl.h>` to read or override the current settings for data transfer parameters in `<linux/spi/spidev.h>` 
@@ -69,7 +69,7 @@ Maximum clock frequency.
 ---
 
 
-## The Transfer
+## STEP 3: The Transfer
 
 
 ::: {style="font-size: 0.8em;"}
@@ -120,13 +120,11 @@ Look at this struct. It has a transmit buffer and a receive buffer. Remember wha
 
 The SPI_IOC_MESSAGE(1) call does everything in one atomic burst: It drops the CS line, fires the Clock 24 times (3 \text{ bytes} \times 8 \text{ bits}), and captures the incoming bits. When it’s done, it lifts the CS line and hands the data back to your C program.
 
-Right now, we’re just taking a snapshot.
+You may have noticed some 'magic' numbers in our command: `0x01`, `0x80`. Why send 3 bytes? Why ignore the very first byte that comes back? Why the result value is in 10 bits? I’ll leave that as a challenge for you to solve tonight. Use our **Full-Duplex** timing diagram and the sensor's **Technical Manual** to figure out why.
+
+Right now, we're just taking a snapshot.
 To turn this into a monitoring system, we wrap this in a loop and sample continuously.
 
----
-
 That's it. Within 50 lines of C code, you've built the heart of a wildfire early-warning system. You aren't just writing code; you are engineering solutions for the Okanagan.
-
-You may have noticed some 'magic' numbers in our command: `0x01`, `0x80`. Why send 3 bytes? Why ignore the very first byte that comes back? Why the result value is in 10 bits? I’ll leave that as a challenge for you to solve tonight. Use our **Full-Duplex** timing diagram and the sensor's **Technical Manual** to figure out why.
 :::
 
