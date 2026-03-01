@@ -56,7 +56,7 @@
 
 
 ::: {.notes}
-Let's look at a concrete platform — the Raspberry Pi.
+Here is an overview of Raspberry Pi 4.
 
 Many components here are for high-level computing: HDMI, USB, networking.
 
@@ -84,42 +84,6 @@ or drive voltage to control external devices.
 
 :::
 
-## A Closer Look at the GPIO Pins {auto-animate=true .smaller}
-
-
-::: {}
-::: {.columns}
-
-::: {.column width="30%"}
-![](/media/raspi-gpio.png){width=100%}  
-![](/media/raspi-gpio-legend.png){width=50%}                  
-<figcaption>[Source: https://pinout.xyz/](https://pinout.xyz/)</figcaption>
-:::
-
-::: {.column width="70%"}
-Main serial communication protocols besides raw GPIO:<span class="fragment" data-fragment-index="9">![](/media/led.png){style="max-width:30px;"}</span>
-
-| <span class="fragment" data-fragment-index="1">Protocol</span> | <span class="fragment" data-fragment-index="1">Pins</span> | <span class="fragment" data-fragment-index="1">Clock</span>          | <span class="fragment" data-fragment-index="1">Speed</span>      | <span class="fragment" data-fragment-index="1">Multi-Device?</span>           | <span class="fragment" data-fragment-index="1">Best For</span>                                                                                                                                                                                       |
-| -------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <span class="fragment" data-fragment-index="2">**UART**</span> | <span class="fragment" data-fragment-index="2">2</span>    | <span class="fragment" data-fragment-index="2">No (Asynchronous)</span> | <span class="fragment" data-fragment-index="2">low to Moderate</span>        | <span class="fragment" data-fragment-index="2">No (Point-to-point)</span>     | <span class="fragment" data-fragment-index="2">Long-distance communication</span> <span class="fragment" data-fragment-index="6">![](/media/satellite.png){style="max-width:30px;"}</span>                                                           |
-| <span class="fragment" data-fragment-index="3">**I²C**</span>  | <span class="fragment" data-fragment-index="3">2</span>    | <span class="fragment" data-fragment-index="3">Yes</span>               | <span class="fragment" data-fragment-index="3">Moderate</span> | <span class="fragment" data-fragment-index="3">Yes (Addressed bus)</span>     | <span class="fragment" data-fragment-index="3">Many simple sensors</span>  <span class="fragment" data-fragment-index="7">![](/media/temperature-sensor.png){style="max-width:30px;"}![](/media/humidity-sensor.png){style="max-width:30px;"}</span> |
-| <span class="fragment" data-fragment-index="4">**SPI**</span>  | <span class="fragment" data-fragment-index="4">4+</span>   | <span class="fragment" data-fragment-index="4">Yes</span>               | <span class="fragment" data-fragment-index="4">High</span>       | <span class="fragment" data-fragment-index="4">Yes (Chip-select lines)</span> | <span class="fragment" data-fragment-index="4">High-speed sensors/memory</span>  <span class="fragment" data-fragment-index="8">![](/media/oled.png){style="max-width:30px;"}</span>                                                                 |
-|                                                                |
-
-
-::: {.fragment data-fragment-index="5"}
-![](/media/satellite.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![](/media/temperature-sensor.png){style="max-width:30px;"}
-![](/media/humidity-sensor.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![](/media/oled.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![](/media/led.png){style="max-width:30px;"}
-:::
-:::
-
-:::
-:::
-
-
 ::: {.notes}
 Let's zoom in and see what is actually available on that 40-pin header.
 There's a lot of things going on at this part of the board with 40 pins.
@@ -138,7 +102,45 @@ While GPIO gives us raw digital control, Raspberry Pi provides three main specia
 Instead, the Raspberry Pi includes hardware controllers that implement standardized communication protocols.
 
 These protocols organize multiple GPIO pins into structured digital conversations.
+:::
 
+## A Closer Look at the GPIO Pins {auto-animate=true .smaller}
+
+
+::: {}
+::: {.columns}
+
+::: {.column width="30%"}
+![](/media/raspi-gpio.png){width=100%}  
+![](/media/raspi-gpio-legend.png){width=50%}                  
+<figcaption>[Source: https://pinout.xyz/](https://pinout.xyz/)</figcaption>
+:::
+
+::: {.column width="70%"}
+Main serial communication protocols besides raw GPIO:<span class="fragment" data-fragment-index="9">![](/media/led.png){style="max-width:30px;"}</span>
+
+| <span class="fragment" data-fragment-index="1">Protocol</span> | <span class="fragment" data-fragment-index="1">Pins</span> | <span class="fragment" data-fragment-index="1">Clock</span>             | <span class="fragment" data-fragment-index="1">Speed</span>           | <span class="fragment" data-fragment-index="1">Multi-Device?</span>           | <span class="fragment" data-fragment-index="1">Best For</span>                                                                                                                                                                                       |
+| -------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <span class="fragment" data-fragment-index="2">**UART**</span> | <span class="fragment" data-fragment-index="2">2</span>    | <span class="fragment" data-fragment-index="2">No (Asynchronous)</span> | <span class="fragment" data-fragment-index="2">low to Moderate</span> | <span class="fragment" data-fragment-index="2">No (Point-to-point)</span>     | <span class="fragment" data-fragment-index="2">Long-distance communication</span> <span class="fragment" data-fragment-index="6">![](/media/satellite.png){style="max-width:30px;"}</span>                                                           |
+| <span class="fragment" data-fragment-index="3">**I²C**</span>  | <span class="fragment" data-fragment-index="3">2</span>    | <span class="fragment" data-fragment-index="3">Yes</span>               | <span class="fragment" data-fragment-index="3">Moderate</span>        | <span class="fragment" data-fragment-index="3">Yes (Addressed bus)</span>     | <span class="fragment" data-fragment-index="3">Many simple sensors</span>  <span class="fragment" data-fragment-index="7">![](/media/temperature-sensor.png){style="max-width:30px;"}![](/media/humidity-sensor.png){style="max-width:30px;"}</span> |
+| <span class="fragment" data-fragment-index="4">**SPI**</span>  | <span class="fragment" data-fragment-index="4">4+</span>   | <span class="fragment" data-fragment-index="4">Yes</span>               | <span class="fragment" data-fragment-index="4">High</span>            | <span class="fragment" data-fragment-index="4">Yes (Chip-select lines)</span> | <span class="fragment" data-fragment-index="4">High-speed sensors/memory</span>  <span class="fragment" data-fragment-index="8">![](/media/oled.png){style="max-width:30px;"}</span>                                                                 |
+|                                                                |
+
+
+::: {.fragment data-fragment-index="5"}
+![](/media/satellite.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+![](/media/temperature-sensor.png){style="max-width:30px;"}
+![](/media/humidity-sensor.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+![](/media/oled.png){style="max-width:30px;"}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+![](/media/led.png){style="max-width:30px;"}
+:::
+:::
+
+:::
+:::
+
+
+::: {.notes}
 There are three main serial communication protocols besides raw GPIO.
 
 UART:
@@ -177,7 +179,7 @@ Think:
 ---
 
 
-## Translate Analog to Digital {.smaller}
+## Translate Analog to Digital
 
 - Raspberry Pi GPIO is digital only
 - Cannot measure **continuous voltage**
@@ -237,11 +239,11 @@ we connect an external ADC chip.
 
 ---
 
-## This is a transition slide
+## This is a transition slide (TODO)
 
-A case study where we want to use SPI to read data from ADC (e.g., MCP3008) that is connected to a gas sensos (MQ series)
+- A case study: A low-cost air-quality node on your rooftop
 
-Smoke sensor (analog voltage) → MCP3008 ADC (digital number) → Raspberry Pi via SPI → logging/alerts
+- Smoke sensor (analog voltage) → MCP3008 ADC (digital number) → Raspberry Pi via SPI → logging/alerts
 
 ::: {.notes}
 When I was looking up Kelowna, one thing kept coming up — wildfire season is not a rare event here. It’s practically a recurring guest.

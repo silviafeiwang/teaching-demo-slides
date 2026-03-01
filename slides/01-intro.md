@@ -27,7 +27,9 @@ We often think of computation as abstract — code, algorithms, memory.
 
 But embedded systems are different.
 
-They interact with the physical world.
+They interact with the physical world. The ability to sense the physical world and act on it.
+
+They are everywhere.
 
 A microcontroller is a small computer on a chip — like a brain.
 
@@ -40,7 +42,7 @@ Actuators push actions out.
 
 Hardware interfaces are the “nervous system” connecting software and reality.
 
-Today, we’ll focus on how that communication actually happens.
+Today, we’ll zoom into one small but powerful example — the Raspberry Pi — and see how a microcontroller actually talks to sensors and devices at the electrical level.
 :::
 
 ---
