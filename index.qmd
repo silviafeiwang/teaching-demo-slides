@@ -18,6 +18,4 @@ format:
           - chalkboard
 ---
 
-<!-- {{< include slides/01-intro.md >}}
-{{< include slides/02-raspi.md >}} -->
 {{< include slides/03-handle.md >}}
