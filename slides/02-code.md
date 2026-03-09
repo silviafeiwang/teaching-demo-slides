@@ -81,7 +81,7 @@ Two essential helpers from `<linux/spi/spidev.h>`
 - Instantiate structure `spi_ioc_transfer`
   - Data transmit buffer `.tx_buf`, receive buffer `.rx_buf`, data size `.len`
   - Other optional parameters
-- `SPI_IOC_MESSAGE(N)` triggers electrical signals on the four wires
+- `SPI_IOC_MESSAGE(N)` triggers communication on the hardware wires
   - `N`: how many `spi_ioc_transfer` structures in a single message
 :::
 
