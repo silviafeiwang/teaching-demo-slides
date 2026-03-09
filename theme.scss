@@ -5,7 +5,7 @@ $font-family-sans-serif: "Source Sans Pro", "Roboto", sans-serif;
 $presentation-heading-font: "Source Sans Pro", "Roboto", sans-serif;
 
 // colors
-$body-bg: #F7F8F6;
+$body-bg: #ffffff;
 $body-color: #3f4a45;
 $link-color: #b26a6a;
 $selection-bg: rgba(76, 99, 199, 0.25); // subtle blue selection
@@ -22,6 +22,7 @@ $presentation-heading-color: #4c63c7;
     font-weight: 600;
     /* slightly softer than default bold */
 }
+
 $presentation-title-slide-text-align: left; // ← alignment
 $presentation-h1-font-size: 1.6em; // ← main title
 $presentation-h2-font-size: 1.1em;
@@ -71,6 +72,7 @@ $presentation-h3-font-size: 0.8em;
     background: rgba(178, 106, 106, 0.06);
     /* accent-tinted gray */
 }
+
 .reveal .code-block {
     font-family: "SF Mono", "Roboto Mono", monospace;
     font-size: 0.5em;

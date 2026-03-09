@@ -1,21 +1,16 @@
 ---
-# title: |
-#   Interfacing the Physical World: Hardware Interfaces and Serial Communication in Embedded Systems
-#   <br><span class="subtitle">Computer Engineering Design Studio (CMPE 246)</span>
-# author:
-#   - name: Fei Wang
-#     affiliation: <br>March 9, 2026
-title: "Case Study: SPI-Driven Smoke Monitoring for Wildfire Detection"
+title: The Demo
 format: 
     revealjs:
         theme: theme.scss
         margin: 0.04
         incremental: true  
-        code-block-height: 300px
+        code-block-height: 250px
         menu: false
         slide-number: true
         revealjs-plugins:
           - chalkboard
 ---
 
-{{< include slides/03-handle.md >}}
+{{< include slides/01-theory.md >}}
+{{< include slides/02-code.md >}}

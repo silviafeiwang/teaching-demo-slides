@@ -1,17 +1,15 @@
 
-## STEP 1: Abstracting the Wires
+## STEP 1: Access SPI Device
 
-- Talk to the SPI harware 
+Talk to the SPI harware 
   
-  <span class="fragment"> → `open()` a file descriptor `/dev/spidevX.Y` </span>
+<span class="fragment"> → `open()` a file descriptor `/dev/spidevX.Y` </span>
 
 ::: {.fragment}
-```{.c code-line-numbers="1"}
+```{.c code-line-numbers="|3"}
+#include <fcntl.h>   // open(), O_RDWR
+
 int fd = open("/dev/spidev0.0", O_RDWR);
-if (fd < 0) {
-    perror("Failed to open SPI bus");
-    return 1;
-}
 ```
 :::
 
@@ -25,24 +23,30 @@ Give me access to the SPI device represented by /dev/spidev0.0, and allow me to 
 The first number is SPI bus number. It refers to the SPI controller hardware on the Raspberry Pi.
 The second number is the chip select number on that bus.
 
-Till now, we basically have established the communication with the sensor that CS0 is connected to.
+At this point, we have opened the SPI device interface for bus 0, chip select 0.
+This gives our program access to the SPI controller path connected to that sensor, but it does not yet verify that the sensor is responding correctly.
 :::
 
 
 ---
 
-## STEP 2: The Setup
+## STEP 2: Configure SPI
 
 ::: {style="font-size: 0.8em;"}
-- Use `ioctl()` from `<sys/ioctl.h>` to read or override the current settings for data transfer parameters in `<linux/spi/spidev.h>` 
-  - `SPI_IOC_RD_MODE`, `SPI_IOC_WR_MODE`: Choose among constants `SPI_MODE_0`..`SPI_MODE_3`
-  - `SPI_IOC_RD_BITS_PER_WORD`, `SPI_IOC_WR_BITS_PER_WORD`
-  - `SPI_IOC_RD_MAX_SPEED_HZ`, `SPI_IOC_WR_MAX_SPEED_HZ`
+Use `ioctl()` from `<sys/ioctl.h>` to change data transfer parameters in `<linux/spi/spidev.h>` 
+
+- `SPI_IOC_RD_MODE`, `SPI_IOC_WR_MODE`: Choose among constants `SPI_MODE_0`..`SPI_MODE_3`
+- `SPI_IOC_RD_BITS_PER_WORD`, `SPI_IOC_WR_BITS_PER_WORD`
+- `SPI_IOC_RD_MAX_SPEED_HZ`, `SPI_IOC_WR_MAX_SPEED_HZ`
   <!-- - `SPI_IOC_RD_LSB_FIRST`, `SPI_IOC_WR_LSB_FIRST`: The bit justification used to transfer SPI words -->
 :::
 
 ::: {.fragment}
-```{.c code-line-numbers="1,6|2,7|3,8"}
+```{.c code-line-numbers="|5,10|6,11|7,12"}
+#include <stdint.h>            // uint8_t, uint32_t
+#include <sys/ioctl.h>         // ioctl()
+#include <linux/spi/spidev.h>  // SPI_MODE_0, SPI_IOC_WR_MODE, SPI_IOC_WR_BITS_PER_WORD, SPI_IOC_WR_MAX_SPEED_HZ
+
 uint8_t mode = SPI_MODE_0;    // CPOL=0, CPHA=0 
 uint8_t bits = 8;             
 uint32_t speed = 1000000;     // 1 MHz
@@ -69,36 +73,45 @@ Maximum clock frequency.
 ---
 
 
-## STEP 3: The Transfer
-
+## STEP 3: Transfer Data
 
 ::: {style="font-size: 0.8em;"}
-- Two essential helpers from `<linux/spi/spidev.h>`
-  - Instantiate structure `spi_ioc_transfer` to let the kernel know how to perform each SPI transaction
-  - Full-duplex access using `SPI_IOC_MESSAGE(N)`, where `N` indicates how many `spi_ioc_transfer` structures we are passing as a single message
+Two essential helpers from `<linux/spi/spidev.h>`
+
+- Instantiate structure `spi_ioc_transfer`
+  - Data transmit buffer `.tx_buf`, receive buffer `.rx_buf`, data size `.len`
+  - Other optional parameters
+- `SPI_IOC_MESSAGE(N)` triggers electrical signals on the four wires
+  - `N`: how many `spi_ioc_transfer` structures in a single message
 :::
 
 ::: {.fragment}
-```{.c code-line-numbers="|1-3|5-9|11|13,14|16-19"}
-// The "Wildfire Detection" Request
-uint8_t tx_buf[3] = {0x01, 0x80, 0x00}; // The command we want to send
-uint8_t rx_buf[3] = {0};               // The buffer to catch the response
+```{.c code-line-numbers="|6-7|9-13|15|17-21"}
+#include <stdint.h>            // uint8_t
+#include <unistd.h>            // close()
+#include <sys/ioctl.h>         // ioctl()
+#include <linux/spi/spidev.h>  // struct spi_ioc_transfer, SPI_IOC_MESSAGE
+
+uint8_t tx[4] = {0xFA | 0x80, 0x00, 0x00, 0x00}; // command + 3 dummy
+uint8_t rx[4] = {0};
 
 struct spi_ioc_transfer tr = {
-    .tx_buf = (unsigned long)tx_buf,
-    .rx_buf = (unsigned long)rx_buf,
-    .len = 3,
+    .tx_buf = (unsigned long)tx,
+    .rx_buf = (unsigned long)rx,
+    .len = 4,
 };
 
 ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
 
-// Combine the bits into a 10-bit smoke density value
-int smoke_level = ((rx_buf[1] & 0x03) << 8) + rx_buf[2];
+/* combine raw temperature */
+int32_t temp_raw =
+    (rx[1] << 12) |
+    (rx[2] << 4)  |
+    (rx[3] >> 4);
 
-if (smoke_level > 500) {
-    printf("🔥 Smoke levels rising... "
-           "hopefully it's just someone's BBQ near UBCO.\n");
-}
+printf("Raw temperature = %d\n", temp_raw);
+
+close(fd);
 ```
 :::
 
@@ -120,11 +133,9 @@ Look at this struct. It has a transmit buffer and a receive buffer. Remember wha
 
 The SPI_IOC_MESSAGE(1) call does everything in one atomic burst: It drops the CS line, fires the Clock 24 times (3 \text{ bytes} \times 8 \text{ bits}), and captures the incoming bits. When it’s done, it lifts the CS line and hands the data back to your C program.
 
-You may have noticed some 'magic' numbers in our command: `0x01`, `0x80`. Why send 3 bytes? Why ignore the very first byte that comes back? Why the result value is in 10 bits? I’ll leave that as a challenge for you to solve tonight. Use our **Full-Duplex** timing diagram and the sensor's **Technical Manual** to figure out why.
+You may have noticed some 'magic' numbers in our command: `0x01`, `0x80`. Why send 3 bytes? Why ignore the very first byte that comes back? I’ll leave that as a challenge for you to solve tonight. Use our **Full-Duplex** timing diagram and the sensor's **Technical Manual** to figure out why.
 
 Right now, we're just taking a snapshot.
 To turn this into a monitoring system, we wrap this in a loop and sample continuously.
-
-That's it. Within 50 lines of C code, you've built the heart of a wildfire early-warning system. You aren't just writing code; you are engineering solutions for the Okanagan.
 :::
 
