@@ -14,13 +14,13 @@
 
 ::: {.columns}
 
-::: {.column width="40%"}
-- Access SPI Device
-- Configure SPI
+::: {.column width="60%"}
+- Access the Interface
+- Configure Communication Parameters
 - Transfer Data
 :::
 
-::: {.column width="60%"}
+::: {.column width="40%"}
 ::: {.fragment}
 **When our code runs, what actually happens on the wires?**
 :::
@@ -34,7 +34,7 @@
 
 ---
 
-## A SPI Transaction
+## An SPI Transaction
 
 <!-- ::: {.columns}
 

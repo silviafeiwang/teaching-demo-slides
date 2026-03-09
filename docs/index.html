@@ -209,13 +209,13 @@
 <p><img data-src="./media/bme280.jpg" style="width:50.0%"></p>
 </div></div>
 <div class="columns">
-<div class="column" style="width:40%;">
+<div class="column" style="width:60%;">
 <ul>
-<li class="fragment">Access SPI Device</li>
-<li class="fragment">Configure SPI</li>
+<li class="fragment">Access the Interface</li>
+<li class="fragment">Configure Communication Parameters</li>
 <li class="fragment">Transfer Data</li>
 </ul>
-</div><div class="column" style="width:60%;">
+</div><div class="column" style="width:40%;">
 <div class="fragment">
 <p><strong>When our code runs, what actually happens on the wires?</strong></p>
 </div>
@@ -242,8 +242,8 @@
 </ul>
 <!-- ::: -->
 </section>
-<section id="step-1-access-spi-device" class="slide level2">
-<h2>STEP 1: Access SPI Device</h2>
+<section id="step-1-access-the-interface" class="slide level2">
+<h2>STEP 1: Access the Interface</h2>
 <p>Talk to the SPI harware</p>
 <p><span class="fragment"> → <code>open()</code> a file descriptor <code>/dev/spidevX.Y</code> </span></p>
 <div class="fragment">
@@ -268,8 +268,8 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="step-2-configure-spi" class="slide level2">
-<h2>STEP 2: Configure SPI</h2>
+<section id="step-2-configure-communication-parameters" class="slide level2">
+<h2>STEP 2: Configure Communication Parameters</h2>
 <div style="font-size: 0.8em;">
 <p>Use <code>ioctl()</code> from <code>&lt;sys/ioctl.h&gt;</code> to change data transfer parameters in <code>&lt;linux/spi/spidev.h&gt;</code></p>
 <ul>

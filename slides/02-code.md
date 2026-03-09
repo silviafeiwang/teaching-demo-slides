@@ -1,5 +1,5 @@
 
-## STEP 1: Access SPI Device
+## STEP 1: Access the Interface
 
 Talk to the SPI harware 
   
@@ -30,7 +30,7 @@ This gives our program access to the SPI controller path connected to that senso
 
 ---
 
-## STEP 2: Configure SPI
+## STEP 2: Configure Communication Parameters
 
 ::: {style="font-size: 0.8em;"}
 Use `ioctl()` from `<sys/ioctl.h>` to change data transfer parameters in `<linux/spi/spidev.h>` 
